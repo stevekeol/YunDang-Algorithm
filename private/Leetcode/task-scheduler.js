@@ -17,21 +17,34 @@
  * 解释：一种可能的解决方案是： A -> B -> C -> A -> D -> E -> A -> F -> G -> A -> () -> () -> A -> () -> () -> A
 
 
- * 思路：
- *   左右走等概率且对称，因此只选择正半轴;
- *   递推前几步: 
- *     1: 1
- *     2: 3, 1
- *     3: 6, 4, 2, 0
- *     4: 10, 8, 6, 4, 2, 0
- *     ... (每一步都是上一步的位置左/右走，并取正)
- *     n: n(n+1)/2, n(n+1)/2-2, n(n+1)/2-4, ...
- *   规律: max(f(n)) = max(f(n-1)) + n; && target <= max(f(n)) && 两者同奇同偶
- * 性能：时间O(n), 空间O(1)
+ * 思路1（假设所有任务key都是[A-Z]）：
+ *   将求解最小时间的问题，转换为求解图的面积
+ *   
+ *   A X X
+ *   A X X
+ *   A - -
+ *   
+ *   行数 = 最多元素的个数;
+ *   列数 = 冷却时间 + 1;
+ *   面积 = 除去最后一行的面积 + 最后一行非-的元素 = Math.max((max - 1) * (n + 1) + maxCount, tasks.length)
+ *   其中: max 为次数最多的元素的次数, maxCount为次数一样最多的元素的个数(含自己), n是冷却时间
+ * 性能：时间O(n), 空间O(n)
  ************************************************************/
 
 const tasks = ['A', 'B', 'A', 'A', 'A', 'B', 'A', 'B', 'B', 'D', 'D', 'E', 'C', 'C', 'C'];
 const n = 2;
+
+// 假设所有任务key都是[A-Z]
+const leastInterval = (tasks, n, h = Array(26).fill(0)) => {
+  if (n === 0) return tasks.length
+  for(let i = 0; i < tasks.length; i++) 
+    h[tasks[i].charCodeAt() - 65]++
+  const max = Math.max(...h), maxCount = 0 // 擅于利用已有工具!
+  h.forEach(n => n === max && maxCount++);
+  return Math.max((max - 1) * (n + 1) + maxCount, tasks.length);
+};
+
+console.log(leastInterval(tasks, n));
 
 // const leastInterval = function(tasks, n) {
 //   if(n == 0) {
@@ -84,50 +97,3 @@ const n = 2;
 
 // console.log(test(tasks))
 
-
-// var leastInterval = function(tasks, n) {
-//     const freq = _.countBy(tasks);
-
-//     // 任务总数
-//     const m = Object.keys(freq).length;
-//     const nextValid = new Array(m).fill(1);
-//     const rest = Object.values(freq);
-
-//     let time = 0;
-//     for (let i = 0; i < tasks.length; i++) {
-//         time++;
-//         let minNextValid = Number.MAX_VALUE;
-//         for (let j = 0; j < m; j++) {
-//             if (rest[j] > 0) {
-//                 minNextValid = Math.min(nextValid[j], minNextValid);
-//             }
-//         }
-//         time = Math.max(time, minNextValid);
-
-//         let best = -1;
-//         for (let j = 0; j < m; j++) {
-//             if (rest[j] && nextValid[j] <= time) {
-//                 if (best === -1 || rest[j] > rest[best]) {
-//                     best = j;
-//                 }
-//             }
-//         }
-
-//         nextValid[best] = time + n + 1;
-//         rest[best]--;
-//     }
-
-//     return time;
-// };
-
-var leastInterval = function(tasks, n, h = Array(26).fill(0)) {
-    if (n === 0) return tasks.length
-    for(var i = 0; i < tasks.length; i++) 
-        h[tasks[i].charCodeAt() - 65]++
-    var max = Math.max(...h), maxCount = 0
-    console.log(max);
-    h.forEach(n => n === max && maxCount++)
-    return Math.max((max - 1) * (n + 1) + maxCount, tasks.length)
-};
-
-console.log(leastInterval(tasks, n));
